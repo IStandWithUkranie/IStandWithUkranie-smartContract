@@ -27,7 +27,7 @@ abstract contract Abstract1155Factory is ERC1155Supply, Ownable {
     }
 
     function flipAllowTransfers() public onlyOwner {
-        allowsTransfers = true;
+        allowsTransfers = !allowsTransfers;
     }
 
     function _beforeTokenTransfer(

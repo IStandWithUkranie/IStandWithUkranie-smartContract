@@ -20,10 +20,11 @@ contract UkranieCharity is Abstract1155Factory {
     uint256 tier1Price = 0.02 ether;
     uint256 tier2Price = 0.1 ether;
     uint256 tier3Price = 0.5 ether;
+    uint256 public totalraised = 0 ether;
     string baseExtension = ".json";
 
     // @dev: event emited when someone donates
-    event donated(address indexed from, uint256 amount, uint256 tier);
+    event donated(address indexed from, uint256 amount);
 
     // @dev: event that fires when funds are withdrawn
     event withdrawn(address to, uint256 value);
@@ -49,13 +50,17 @@ contract UkranieCharity is Abstract1155Factory {
             tier = 1;
         } else if (amountDonated >= tier1Price && amountDonated < tier2Price) {
             tier = 2;
-            _mint(msg.sender, 2, 1, "");
         } else {
             tier = 3;
         }
 
-        _mint(msg.sender, tier, 1, "");
-        emit donated(msg.sender, 1, tier);
+        //mint the corresponding nfts depending of the tier setted.
+        for (uint256 i = 1; i <= tier; ++i) {
+            _mint(msg.sender, i, 1, "");
+        }
+
+        totalraised += amountDonated;
+        emit donated(msg.sender, amountDonated);
     }
 
     function withdrawAll() public payable onlyOwner {
