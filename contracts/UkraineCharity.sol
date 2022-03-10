@@ -15,6 +15,9 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract UkranieCharity is Abstract1155Factory {
+    // ? maybe we need to implement a merkle root based whitelist
+    // 0.01 - 0.49 | 0.5 - 1 | >1
+
     address multisigWallet;
     // ? set this values in the contructor ?
     uint256 tier1Price = 0.02 ether;
