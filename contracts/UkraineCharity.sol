@@ -20,9 +20,9 @@ contract UkranieCharity is Abstract1155Factory {
 
     address multisigWallet;
     // ? set this values in the contructor ?
-    uint256 tier1Price = 0.02 ether;
-    uint256 tier2Price = 0.1 ether;
-    uint256 tier3Price = 0.5 ether;
+    uint256 tier1Price = 0.049 ether;
+    uint256 tier2Price = 0.05 ether;
+    uint256 tier3Price = 1 ether;
     uint256 public totalraised = 0 ether;
     string baseExtension = ".json";
 
@@ -45,6 +45,7 @@ contract UkranieCharity is Abstract1155Factory {
     }
 
     function donate() public payable {
+        require(msg.value >= 0.01 ether);
         uint256 amountDonated = msg.value;
         uint256 tier = 1;
 

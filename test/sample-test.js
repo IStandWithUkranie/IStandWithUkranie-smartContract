@@ -1,19 +1,29 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "hardhat";
 
-describe("Greeter", function () {
-  it("Should return the new greeting once it's changed", async function () {
-    const Greeter = await ethers.getContractFactory("Greeter");
-    const greeter = await Greeter.deploy("Hello, world!");
-    await greeter.deployed();
+describe("mints", function () {
+  it("Should mint the corresponding nfts to the senders", async function () {
+    const [owner, addr1, addr2] = await hre.ethers.getSigners();
 
-    expect(await greeter.greet()).to.equal("Hello, world!");
+    const UkranieCharity = await ethers.getContractFactory("UkraineCharity");
+    const Contract = await UkranieCharity.deploy(
+      "IStandWithUkranie",
+      "ISWK",
+      "https://sampleuri",
+      "0x7ec7af8cff090c533dc23132286f33dd31d13e29"
+    );
+    await Contract.deployed();
 
-    const setGreetingTx = await greeter.setGreeting("Hola, mundo!");
+    // Tier1 test
+    const txn1 = await Contract.connect(addr1).donate({
+      value: ethers.utils.parseEther("0.05"),
+    });
+    txn1.wait();
+    const balanceOfAdd1 = await instance.balanceOf(addr1.address, 1);
+    expect(balanceOfAdd1).to.equal(1);
 
-    // wait until the transaction is mined
-    await setGreetingTx.wait();
+    // Tier 2 test
 
-    expect(await greeter.greet()).to.equal("Hola, mundo!");
+    // Tier 3 test
   });
 });

@@ -33,6 +33,10 @@ async function main() {
   console.log("balance of ", balanceOfAdd2);
   console.log(donationEvent);
 
+  const withdrawTxn = await instance.withdrawAll();
+  await withdrawTxn.wait();
+  const balance0ETH = await instance.provider.getBalance(instance.address);
+  console.log("contract balance ", balance0ETH);
   console.log("contract deployed to", instance.address);
   console.log("total raised is ", totalraised);
 }
