@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract UkranieCharity is Abstract1155Factory {
     // ? maybe we need to implement a merkle root based whitelist
-    // 0.01 - 0.49 | 0.5 - 1 | >1
+    //and people will receive the 3 nfts no matter how much they have donated
 
     address multisigWallet;
     // ? set this values in the contructor ?
@@ -25,9 +25,11 @@ contract UkranieCharity is Abstract1155Factory {
     uint256 tier3Price = 1 ether;
     uint256 public totalraised = 0 ether;
     string baseExtension = ".json";
+    // using uint at 1 bc of gas savings
+    uint256 paused = 1;
 
     // @dev: event emited when someone donates
-    event donated(address indexed from, uint256 amount);
+    event donated(address indexed from, uint256 amount, uint256 timestamp);
 
     // @dev: event that fires when funds are withdrawn
     event withdrawn(address to, uint256 value);
@@ -45,6 +47,7 @@ contract UkranieCharity is Abstract1155Factory {
     }
 
     function donate() public payable {
+        require(paused == 1);
         require(msg.value >= 0.01 ether);
         uint256 amountDonated = msg.value;
         uint256 tier = 1;
@@ -59,12 +62,16 @@ contract UkranieCharity is Abstract1155Factory {
         }
 
         //mint the corresponding nfts depending of the tier setted.
-        for (uint256 i = 1; i <= tier; ++i) {
+        //unchecked ++i for about 12k gas savings per iteration
+        for (uint256 i = 1; i <= tier; ) {
             _mint(msg.sender, i, 1, "");
+            unchecked {
+                ++i;
+            }
         }
 
         totalraised += amountDonated;
-        emit donated(msg.sender, amountDonated);
+        emit donated(msg.sender, amountDonated, block.timestamp);
     }
 
     function withdrawAll() public payable onlyOwner {
