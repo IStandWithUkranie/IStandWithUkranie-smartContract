@@ -18,6 +18,17 @@ contract UkranieCharity is Abstract1155Factory {
     // ? maybe we need to implement a merkle root based whitelist
     //and people will receive the 3 nfts no matter how much they have donated
 
+    // ? time limit 2-weeks 10dayes
+
+    // max supply
+
+    // limited amount for each nft
+
+    // mint function onlyOwner
+
+    // limited separated collections
+    // create an arr to set the ids minteable at a time
+
     address multisigWallet;
     // ? set this values in the contructor ?
     uint256 tier1Price = 0.049 ether;
@@ -44,6 +55,7 @@ contract UkranieCharity is Abstract1155Factory {
         symbol_ = _symbol;
         multisigWallet = _multisigWallet;
         _setURI(_uri);
+        //? mint some nfts to the multisig for promotion porpuses
     }
 
     function donate() public payable {
