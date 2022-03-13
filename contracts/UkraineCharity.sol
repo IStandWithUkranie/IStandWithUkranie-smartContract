@@ -86,6 +86,10 @@ contract UkranieCharity is Abstract1155Factory {
         emit donated(msg.sender, amountDonated, block.timestamp);
     }
 
+    function giveAway(uint256 nftTier, address receiver) public onlyOwner {
+        _mint(receiver, nftTier, 1, "");
+    }
+
     function withdrawAll() public payable onlyOwner {
         (bool succ, ) = multisigWallet.call{value: address(this).balance}("");
         require(succ, "transaction failed");
