@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity >=0.8.0 <0.9.0;
 
 /**
  * @title charity nft erc1155 smart contract
@@ -32,7 +32,7 @@ contract UkranieCharity is Abstract1155Factory {
     uint256 paused = 2; // -> timestamps
     uint256[3] nftsMaxSuplly = [5000, 130, 75];
 
-    mapping(address => bool) whitelist;
+    mapping(address => bool) public whitelist;
     mapping(address => bool) whitelistUsed;
 
     // @notice event emited when someone donates
