@@ -30,10 +30,10 @@ contract UkranieCharity is Abstract1155Factory {
     uint256 public totalraised = 0 ether;
     // 1 = paused - 2 = active
     uint256 paused = 2; // -> timestamps
-    uint256[3] nftsSupply = [0, 0, 0];
     uint256[3] nftsMaxSuplly = [5000, 130, 75];
 
     mapping(address => bool) whitelist;
+    mapping(address => bool) whitelistUsed;
 
     // @notice event emited when someone donates
     event Donated(address indexed _from, uint256 time, uint256 _value);
@@ -52,27 +52,27 @@ contract UkranieCharity is Abstract1155Factory {
         name_ = _name;
         symbol_ = _symbol;
         multisigWallet = _multisigWallet;
-        _setURI(_uri);
-        //? mint some nfts to the multisig for promotion porpuses
     }
 
     // @notice mint NFTs corresponding to the value sent
     function donate() public payable {
-        require(paused == 2, "Contract is paused");
+        require(paused != 1, "Contract is paused");
         require(msg.value >= 0.01 ether, "You must donate at least 0.01 ether");
         uint256 amountDonated = msg.value;
         uint256 tier = 1;
 
-        if (amountDonated < 0.21 ether) tier = 1;
-        if (amountDonated < 0.51 ether) tier = 2;
-        if (amountDonated > 0.51 ether) tier = 3;
+        if (amountDonated < 0.21 ether) {
+            tier = 1;
+        } else if (amountDonated < 0.51 ether) {
+            tier = 2;
+        } else {
+            tier = 3;
+        }
 
         for (uint256 i = 0; i < tier; ++i)
-            //use erc1155 supply
-            require(nftsSupply[i] <= nftsMaxSuplly[i], "one ");
+            require(totalSupply(tier) <= nftsMaxSuplly[i], "one ");
 
         for (uint256 i = 0; i < tier; ) {
-            ++nftsSupply[i];
             _mint(msg.sender, (i + 1), 1, "");
             unchecked {
                 ++i;
@@ -85,12 +85,16 @@ contract UkranieCharity is Abstract1155Factory {
 
     // @notice mint all the nfts to the msg.sender
     function whitelistDonation() external payable {
-        require(paused != 1);
-        require(msg.value >= 0.01 ether);
-        require(whitelist[msg.sender]);
+        require(paused != 1, "contract is paused");
+        require(
+            !whitelistUsed[msg.sender],
+            "you have already claimed your whitelist gift"
+        );
+        require(msg.value >= 0.01 ether, "you must at least donate 0.01 ether");
+        require(whitelist[msg.sender], "You must be in the whitelist");
+        whitelistUsed[msg.sender] = true;
 
         for (uint256 i = 0; i < 3; ++i) {
-            ++nftsSupply[i];
             _mint(msg.sender, i + 1, 1, "");
         }
         totalraised += msg.value;
@@ -101,6 +105,10 @@ contract UkranieCharity is Abstract1155Factory {
     // @param receiver address to receive the NFT
     function giveAway(uint256 nftTier, address receiver) public onlyOwner {
         _mint(receiver, nftTier, 1, "");
+    }
+
+    function addToWhitelist(address _add) external onlyOwner {
+        whitelist[_add] = true;
     }
 
     function flipPause() external onlyOwner {
