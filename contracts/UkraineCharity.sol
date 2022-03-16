@@ -1,35 +1,20 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: MIT
 
 pragma solidity >=0.8.0 <0.9.0;
 
 /**
- * @title charity nft erc1155 smart contract
+ * @title IStandWithUkraine Contract to raise funds for helping Ukrainian civilians and army
  * @dev Allow a charity organization give non transferable nfts to contributors
- * @author Alex encinas
+ * @author Alex Encinas, Nazariy Dumanskyy, Sebastian Lujan, Lem Canady
  */
 import "./Abstract1155Factory.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract UkranieCharity is Abstract1155Factory {
-    // ? maybe we need to implement a merkle root based whitelist
-    //and people will receive the 3 nfts no matter how much they have donated
-    // lower the prices to below 1 eth
-    // ? time limit 2-weeks 10dayes
-    // max supply
-    // limited amount for each nft !!!
-    // mint function onlyOwner
-    // limited separated collections
-    // create an arr to set the ids minteable at a time
-
-    string baseExtension = ".json";
+contract UkraineCharity is Abstract1155Factory {
     address public multisigWallet;
     uint256 public totalraised = 0 ether;
     // 1 = paused - 2 = active
-    uint256 paused = 2; // -> timestamps
+    uint256 paused = 2;
     uint256[3] nftsMaxSuplly = [5000, 130, 75];
 
     mapping(address => bool) public whitelist;
@@ -54,75 +39,100 @@ contract UkranieCharity is Abstract1155Factory {
         multisigWallet = _multisigWallet;
     }
 
-    // @notice mint NFTs corresponding to the value sent
+    /**
+    * @notice Donate eth and mint corresponding NFTs
+    */
     function donate() public payable {
-        uint256 amountDonated = msg.value;
-        uint256 tier = 1;
-
-        if (amountDonated < 0.21 ether) {
-            tier = 1;
-        } else if (amountDonated < 0.51 ether) {
-            tier = 2;
+        if(whitelist[msg.sender]){
+            whitelistDonation();
         } else {
-            tier = 3;
+            uint256 amountDonated = msg.value;
+            uint256 tier = 0;
+            if (amountDonated < 0.21 ether) {
+                tier = 0;
+            } else if (amountDonated < 0.51 ether) {
+                tier = 1;
+            } else {
+                tier = 2;
+            }
+            mint(tier);
         }
-        mint(tier);
     }
 
-    // @notice mint all the nfts to the msg.sender
-    function whitelistDonation() external payable {
+    /**
+    * @notice Donate eth and mint corresponding NFTs for whitelisters
+    */
+    function whitelistDonation() private {
         require(
             !whitelistUsed[msg.sender],
             "you have already claimed your whitelist gift"
         );
-        require(whitelist[msg.sender], "You must be in the whitelist");
         whitelistUsed[msg.sender] = true;
-        mint(3);
+        mint(2);
     }
 
+    /**
+    * @notice global mint function used for both whitelist and public mint
+    *
+    * @param _tier the tier of tokens that the sender will receive
+    */
     function mint(uint256 _tier) private {
         require(paused != 1, "Contract is paused");
         require(msg.value >= 0.01 ether, "You must donate at least 0.01 ether");
 
-        for (uint256 i = 0; i < 3; ++i)
-            require(totalSupply(i + 1) + 1 <= nftsMaxSuplly[i], "one");
-
-        for (uint256 i = 0; i < _tier; ) {
-            _mint(msg.sender, (i + 1), 1, "");
-            unchecked {
-                ++i;
-            }
+        for (uint256 i = 0; i <= _tier; ++i){
+            require(totalSupply(i) + 1 <= nftsMaxSuplly[i], "Max supply has been reached");
+            _mint(msg.sender, (i), 1, "");
         }
+
         totalraised += msg.value;
         emit Donation(msg.sender, block.timestamp, msg.value);
     }
 
-    // @notice giveaway nft of the selected tier to receiver
-    // @param nftTier set the nft to be minted
-    // @param receiver address to receive the NFT
+    /**
+    * @notice giveaway nft of the selected tier to receiver
+    *
+    * @param nftTier set the nft to be minted
+    * @param receiver address to receive the NFT
+    */
     function giveAway(uint256 nftTier, address receiver) public onlyOwner {
         _mint(receiver, nftTier, 1, "");
     }
 
-    function addToWhitelist(address _add) external onlyOwner {
-        whitelist[_add] = true;
+    /**
+    * @notice adds addresses into a whitelist
+    *
+    * @param addresses an array of addresses to add to whitelist
+    */
+    function setWhiteList(address[] calldata addresses ) external onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            whitelist[addresses[i]] = true;
+        }
     }
 
+    /**
+    * @notice function to pause and unpause minting
+    */
     function flipPause() external onlyOwner {
         if (paused == 1) paused = 2;
         if (paused == 2) paused = 1;
     }
 
-    // @notice withdraw all the funds to the multisig wallet
+    /**
+    * @notice withdraw all the funds to the multisig wallet tp later be donated to Ukrainian relief organizations
+    */
     function withdrawAll() public payable onlyOwner {
         (bool succ, ) = multisigWallet.call{value: address(this).balance}("");
         require(succ, "transaction failed");
         emit Withdrawn(multisigWallet, address(this).balance);
     }
 
-    // @notice change the supply of the selected tier
-    // @param _tier tier maxSupply to be cahnged
-    // @param _newMaxAmount Max supply to be assigned to the nft
+    /**
+    * @notice change the supply of the selected tier
+    *
+    * @param _tier tier to change max supply for
+    * @param _newMaxAmount Max supply to be assigned to the nft
+    */
     function setMaxSupplly(uint256 _tier, uint256 _newMaxAmount)
         external
         onlyOwner
@@ -130,8 +140,11 @@ contract UkranieCharity is Abstract1155Factory {
         nftsMaxSuplly[_tier] = _newMaxAmount;
     }
 
-    // @notice change all NFTs maxSupply
-    // @param array of new Supplys [tier1, tier2, tier3]
+    /**
+    * @notice change all NFTs maxSupply
+    *
+    * @param _newSupplys array of new Supplys [tier1, tier2, tier3]
+    */
     function batchSetMaxSupply(uint256[3] memory _newSupplys)
         external
         onlyOwner
@@ -140,8 +153,11 @@ contract UkranieCharity is Abstract1155Factory {
             nftsMaxSuplly[i] = _newSupplys[i];
     }
 
-    // @notice returns the  uri for the selected NFT
-    // @param _id NFT id
+    /**
+    * @notice returns the  uri for the selected NFT
+    *
+    * @param _id NFT id
+    */
     function uri(uint256 _id) public view override returns (string memory) {
         require(exists(_id), "URI: nonexistent token");
         return
@@ -149,7 +165,7 @@ contract UkranieCharity is Abstract1155Factory {
                 abi.encodePacked(
                     super.uri(_id),
                     Strings.toString(_id),
-                    baseExtension
+                    ".json"
                 )
             );
     }
