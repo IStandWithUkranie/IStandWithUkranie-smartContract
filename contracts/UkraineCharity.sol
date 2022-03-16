@@ -96,6 +96,7 @@ contract UkraineCharity is Abstract1155Factory {
     * @param receiver address to receive the NFT
     */
     function giveAway(uint256 nftTier, address receiver) public onlyOwner {
+        require(totalSupply(nftTier) + 1 <= nftsMaxSuplly[nftTier], "Max supply has been reached");
         _mint(receiver, nftTier, 1, "");
     }
 
