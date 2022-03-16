@@ -77,7 +77,7 @@ contract UkraineCharity is Abstract1155Factory {
     * @param _tier the tier of tokens that the sender will receive
     */
     function mint(uint256 _tier) private {
-        require(paused != 1, "Contract is paused");
+        require(!paused, "Contract is paused");
         require(msg.value >= 0.01 ether, "You must donate at least 0.01 ether");
 
         for (uint256 i = 0; i <= _tier; ++i){
