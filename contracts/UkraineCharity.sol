@@ -43,7 +43,7 @@ contract UkraineCharity is Abstract1155Factory {
     * @notice Donate eth and mint corresponding NFTs
     */
     function donate() public payable {
-        if(whitelist[msg.sender]){
+        if(whitelist[msg.sender] && !whitelistUsed[msg.sender]){
             whitelistDonation();
         } else {
             uint256 amountDonated = msg.value;
