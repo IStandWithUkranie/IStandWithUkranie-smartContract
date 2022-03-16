@@ -1,18 +1,14 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: MIT
 
 pragma solidity >=0.8.0 <0.9.0;
 
-/**
- * @title
- * @dev Implements voting process along with vote delegation
- */
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
 abstract contract Abstract1155Factory is ERC1155Supply, Ownable {
     string name_;
     string symbol_;
-    bool public allowsTransfers = false;
+    bool public allowsTransfers = true;
 
     function name() public view returns (string memory) {
         return name_;
