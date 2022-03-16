@@ -15,7 +15,7 @@ contract UkraineCharity is Abstract1155Factory {
     uint256 public totalraised = 0 ether;
     // 1 = paused - 2 = active
     bool public paused = false;
-    uint256[3] nftsMaxSuplly = [5000, 130, 75];
+    uint256[3] public nftsMaxSuplly = [5000, 130, 75];
 
     mapping(address => bool) public whitelist;
     mapping(address => bool) whitelistUsed;
