@@ -14,7 +14,7 @@ contract UkraineCharity is Abstract1155Factory {
     address public multisigWallet;
     uint256 public totalraised = 0 ether;
     // 1 = paused - 2 = active
-    uint256 paused = 2;
+    bool paused = false;
     uint256[3] nftsMaxSuplly = [5000, 130, 75];
 
     mapping(address => bool) public whitelist;
@@ -114,8 +114,7 @@ contract UkraineCharity is Abstract1155Factory {
     * @notice function to pause and unpause minting
     */
     function flipPause() external onlyOwner {
-        if (paused == 1) paused = 2;
-        if (paused == 2) paused = 1;
+        paused = !paused;
     }
 
     /**
